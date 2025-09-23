@@ -1,86 +1,54 @@
 {% extends 'base.html' %}
 {% block content %}
-{% load static %}
-<div class="p-3">
-  <div class="container">
-    <div class="row mt-3">
-      <div class="col-md-6 mx-auto mb-3">
-        <h2>{{ template_data.movie.name }}</h2>
-        <hr />
-        <p><b>Description:</b> {{ template_data.movie.description }}</p>
-        <p><b>Price:</b> ${{ template_data.movie.price }}</p>
-        <p class="card-text">
-          <form method="post" action="{% url 'cart.add' id=template_data.movie.id %}">
-            <div class="row">
-              {% csrf_token %}
-              <div class="col-auto">
-                <div class="input-group col-auto">
-                  <div class="input-group-text">Quantity</div>
-                  <input type="number" min="1" max="10" class="form-control quantity-input" name="quantity" value="1">
-                </div>
-              </div>
-              <div class="col-auto">
-                <button class="btn bg-dark text-white" type="submit">Add to cart</button>
-              </div>
+<div class="p-3" style="background-color: #f8f9fa;">
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-md-8 mx-auto">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light">
+            <h2 class="card-title mb-0">{{ template_data.job.title }}</h2>
+            <h5 class="card-subtitle mt-1 text-muted">{{ template_data.job.company }} — {{ template_data.job.location }}</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <span class="badge bg-primary me-2">{{ template_data.job.job_type }}</span>
+              {% if template_data.job.is_remote %}
+                <span class="badge bg-success me-2">Remote</span>
+              {% endif %}
+               {% if template_data.job.provides_sponsorship %}
+                <span class="badge bg-info text-dark me-2">Visa Sponsorship</span>
+              {% endif %}
             </div>
-          </form>
-        </p>
 
-        <h2>Reviews</h2>
-        <hr />
-        <ul class="list-group">
-          {% for review in template_data.reviews %}
-          <li class="list-group-item pb-3 pt-3">
-            <h5 class="card-title">
-              Review by {{ review.user.username }}
-            </h5>
-            <h6 class="card-subtitle mb-2 text-muted">
-              {{ review.date }}
-            </h6>
-            <p class="card-text">{{ review.comment }}</p>
-            {% if user.is_authenticated and user == review.user %}
-            <a class="btn btn-primary"
-              href="{% url 'movies.edit_review' id=template_data.movie.id review_id=review.id %}">
-              Edit
-            </a>
-            <a class="btn btn-danger"
-              href="{% url 'movies.delete_review' id=template_data.movie.id review_id=review.id %}">
-              Delete
-            </a>
+            {% if template_data.job.salary_min and template_data.job.salary_max %}
+            <p><strong>Salary Range:</strong> ${{ template_data.job.salary_min|floatformat }} - ${{ template_data.job.salary_max|floatformat }} per year</p>
             {% endif %}
-          </li>
-          {% endfor %}
-        </ul>
+            
+            <hr>
+            
+            <h6>Full Job Description:</h6>
+            <p style="white-space: pre-wrap;">{{ template_data.job.description }}</p>
 
-        {% if user.is_authenticated %}
-        <div class="container mt-4">
-          <div class="row justify-content-center">
-            <div class="col-12">
-              <div class="card shadow p-3 mb-4 rounded">
-                <div class="card-body">
-                  <b class="text-start">Create a review</b><br /><br />
-                  <form method="POST" action="{% url 'movies.create_review' id=template_data.movie.id %}">
-                    {% csrf_token %}
-                    <p>
-                      <label for="comment">Comment:</label>
-                      <textarea name="comment" required class="form-control" id="comment"></textarea>
-                    </p>
+            {% if template_data.job.skills.all %}
+            <hr>
+            <h6>Required Skills:</h6>
+            <p>
+              {% for skill in template_data.job.skills.all %}
+                <span class="badge bg-secondary">{{ skill.name }}</span>
+              {% endfor %}
+            </p>
+            {% endif %}
+            
+            <hr>
 
-                    <div class="text-center">
-                      <button type="submit" class="btn bg-dark text-white">
-                        Add Review
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+            <div class="d-grid gap-2">
+              <a href="{% url 'applications.apply' job_id=template_data.job.id %}" class="btn btn-primary btn-lg">Apply Now</a>
             </div>
           </div>
+          <div class="card-footer text-muted">
+            Posted: {{ template_data.job.posted_at|date:"F j, Y" }}
+          </div>
         </div>
-        {% endif %}
-      </div>
-      <div class="col-md-6 mx-auto mb-3 text-center">
-        <img src="{{ template_data.movie.image.url }}" class="rounded img-card-400" />
       </div>
     </div>
   </div>
