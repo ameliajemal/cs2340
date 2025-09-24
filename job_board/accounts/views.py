@@ -4,6 +4,15 @@ from .forms import CustomUserCreationForm, CustomErrorList
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.http import Http404
+from .models import UserProfile
+
+def is_recruiter(user):
+    """Check if user is a recruiter"""
+    try:
+        return user.userprofile.role == 'recruiter'
+    except UserProfile.DoesNotExist:
+        return False
 
 @login_required
 def logout(request):
@@ -39,6 +48,16 @@ def signup(request):
         else:
             template_data['form'] = form
             return render(request, 'accounts/signup.html', {'template_data': template_data})
+
+@login_required
+def dashboard(request):
+    """Dashboard view - accessible only to recruiters"""
+    if not is_recruiter(request.user):
+        raise Http404("Page not found")
+    
+    template_data = {}
+    template_data['title'] = 'Dashboard'
+    return render(request, 'accounts/dashboard.html', {'template_data': template_data})
 
 @login_required
 def orders(request):
