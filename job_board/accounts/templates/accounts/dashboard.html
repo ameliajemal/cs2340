@@ -39,8 +39,82 @@
             </div>
           </div>
         </div>
+
+        <!-- Pipelines Overview -->
+        {% if template_data.jobs %}
+        <div class="card shadow p-3 mb-4 rounded">
+          <div class="card-body">
+            <h3><i class="fas fa-columns text-info me-2"></i>Application Pipelines</h3>
+            <p class="text-muted">Quick access to all your job application pipelines</p>
+            <hr />
+            
+            <div class="row">
+              {% for job in template_data.jobs %}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-left-primary">
+                  <div class="card-header bg-light">
+                    <h6 class="card-title mb-1">{{ job.title }}</h6>
+                    <small class="text-muted">{{ job.company }} • {{ job.location }}</small>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <span class="badge bg-primary">
+                        <i class="fas fa-users me-1"></i>{{ job.total_applications }} Total Applications
+                      </span>
+                    </div>
+                    
+                    <!-- Stage breakdown -->
+                    <div class="row text-center">
+                      {% for stage_code, stage_data in job.stage_counts.items %}
+                      {% if stage_data.count > 0 %}
+                      <div class="col-6 mb-2">
+                        <div class="badge bg-{% if stage_code == 'rejected' %}danger{% elif stage_code == 'offer' %}warning{% elif stage_code == 'interview' %}info{% else %}secondary{% endif %}">
+                          {{ stage_data.count }}
+                        </div>
+                        <br>
+                        <small class="text-muted">{{ stage_data.name }}</small>
+                      </div>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="card-footer bg-transparent">
+                    {% if job.total_applications > 0 %}
+                    <a href="{% url 'applications.pipeline' job.id %}" class="btn btn-outline-info btn-sm w-100">
+                      <i class="fas fa-columns me-1"></i> View Pipeline
+                    </a>
+                    {% else %}
+                    <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                      <i class="fas fa-columns me-1"></i> No Applications Yet
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="card shadow p-3 mb-4 rounded">
+          <div class="card-body text-center">
+            <i class="fas fa-columns fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Job Pipelines Yet</h4>
+            <p class="text-muted">Post your first job to start tracking applications in pipelines.</p>
+            <a href="{% url 'jobs.create' %}" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Post Your First Job
+            </a>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
+
+<style>
+.border-left-primary {
+  border-left: 4px solid #007bff !important;
+}
+</style>
 {% endblock content %}

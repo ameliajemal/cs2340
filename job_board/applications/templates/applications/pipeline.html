@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  
+  <div class="row mb-4">
+    <div class="col">
+      <h2>{{ template_data.job.title }} - Application Pipeline</h2>
+      <p class="text-muted">{{ template_data.job.company }} | {{ template_data.job.location }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    {% for stage_code, stage_data in template_data.applications_by_stage.items %}
+    <div class="col-md-2">
+      <div class="card h-100 pipeline-column" data-stage="{{ stage_code }}">
+        <div class="card-header stage-header stage-{{ stage_code }}">
+          <h6 class="mb-0 text-white">{{ stage_data.name }}</h6>
+          <small class="text-white-50">{{ stage_data.applications|length }} applications</small>
+        </div>
+        <div class="card-body p-2 stage-body" style="min-height: 400px;">
+          {% for application in stage_data.applications %}
+          <div class="card mb-2 application-card" data-application-id="{{ application.id }}" draggable="true">
+            <div class="card-body p-2">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h6 class="mb-1">{{ application.user.username }}</h6>
+                  <small class="text-muted">{{ application.user.email }}</small>
+                </div>
+                <i class="fas fa-grip-vertical drag-handle text-muted"></i>
+              </div>
+              
+              <div class="mb-2">
+                <small class="text-muted">Applied: {{ application.date_applied|date:"M d, Y" }}</small>
+              </div>
+              
+              {% if application.notes %}
+              <div class="mb-2">
+                <small class="text-muted">{{ application.notes|truncatechars:50 }}</small>
+              </div>
+              {% endif %}
+              
+              <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-primary btn-sm" onclick="editNotes({{ application.id }}, '{{ application.notes|escapejs }}')">
+                  <i class="fas fa-sticky-note"></i>
+                </button>
+                <small class="text-muted">{{ application.stage|title }}</small>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center text-muted py-4">
+            <small>No applications</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Notes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control" id="notesTextarea" rows="4"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveNotes()">Save Notes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentApplicationId = null;
+let draggedElement = null;
+
+// Drag and drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const applicationCards = document.querySelectorAll('.application-card');
+    const stageBodies = document.querySelectorAll('.stage-body');
+    
+    // Add drag event listeners to application cards
+    applicationCards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+    
+    // Add drop event listeners to stage bodies
+    stageBodies.forEach(body => {
+        body.addEventListener('dragover', handleDragOver);
+        body.addEventListener('drop', handleDrop);
+        body.addEventListener('dragenter', handleDragEnter);
+        body.addEventListener('dragleave', handleDragLeave);
+    });
+});
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    draggedElement = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    
+    if (draggedElement) {
+        const newStage = getStageFromColumn(this);
+        const applicationId = draggedElement.dataset.applicationId;
+        
+        // Move the element visually
+        this.appendChild(draggedElement);
+        
+        // Update the stage in the database
+        updateApplicationStage(applicationId, newStage);
+    }
+}
+
+function getStageFromColumn(column) {
+    const pipelineColumn = column.closest('.pipeline-column');
+    return pipelineColumn.dataset.stage;
+}
+
+function updateApplicationStage(applicationId, newStage) {
+    fetch(`/applications/update-stage/${applicationId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ stage: newStage })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateStageCounts();
+        } else {
+            console.error('Error updating stage:', data.error);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        location.reload();
+    });
+}
+
+function updateStageCounts() {
+    // Update the count for each stage column
+    const stageColumns = document.querySelectorAll('.pipeline-column');
+    stageColumns.forEach(column => {
+        const stageBody = column.querySelector('.stage-body');
+        const countElement = column.querySelector('.stage-header small');
+        const applicationCount = stageBody.querySelectorAll('.application-card').length;
+        countElement.textContent = `${applicationCount} applications`;
+        
+        // Remove "No applications" text if there are applications
+        const noApplicationsText = stageBody.querySelector('.text-center.text-muted');
+        if (applicationCount > 0 && noApplicationsText) {
+            noApplicationsText.remove();
+        } else if (applicationCount === 0 && !noApplicationsText) {
+            // Add "No applications" text if there are no applications
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'text-center text-muted py-4';
+            emptyDiv.innerHTML = '<small>No applications</small>';
+            stageBody.appendChild(emptyDiv);
+        }
+    });
+}
+
+function editNotes(applicationId, currentNotes) {
+    currentApplicationId = applicationId;
+    document.getElementById('notesTextarea').value = currentNotes;
+    new bootstrap.Modal(document.getElementById('notesModal')).show();
+}
+
+function saveNotes() {
+    const notes = document.getElementById('notesTextarea').value;
+    
+    fetch(`/applications/update-notes/${currentApplicationId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ notes: notes })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('notesModal')).hide();
+            location.reload();
+        } else {
+            alert('Error saving notes: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+/* Blue and white color scheme */
+.stage-rejected {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.stage-applied {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.stage-review {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.stage-interview {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.stage-offer {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+/* Pipeline column styling */
+.pipeline-column {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pipeline-column:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.stage-header {
+    border-radius: 0.375rem 0.375rem 0 0 !important;
+    border: none;
+}
+
+.stage-body {
+    background-color: #f8f9fa;
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.application-card {
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: move;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.application-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.application-card[draggable="true"]:hover {
+    cursor: move;
+}
+
+.drag-handle {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.application-card:hover .drag-handle {
+    opacity: 1;
+}
+
+/* Drop zone styling */
+.stage-body {
+    transition: background-color 0.2s ease;
+}
+
+.stage-body.drag-over {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    border: 2px dashed #007bff;
+    border-radius: 0.375rem;
+}
+
+/* Prevent text selection during drag */
+.application-card * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.application-card.dragging {
+    opacity: 0.5;
+    transform: rotate(0deg) !important;
+}
+
+/* Stage count badges */
+.stage-header small {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* Notes button styling */
+.btn-outline-primary {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+/* Drag handle */
+.drag-handle {
+    color: #6c757d;
+    cursor: grab;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Enhanced visual feedback */
+.application-card:active {
+    transform: scale(0.98);
+}
+</style>
+{% endblock content %}
