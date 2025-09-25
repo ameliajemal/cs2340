@@ -72,10 +72,12 @@ def pipeline(request, job_id):
         }
 
     return render(request, "applications/pipeline.html", {
-        "title": f"Pipeline - {job.title}",
-        "job": job,
-        "applications_by_stage": applications_by_stage,
-        "stage_choices": STAGES
+        "template_data": {
+            "title": f"Pipeline - {job.title}",
+            "job": job,
+            "applications_by_stage": applications_by_stage,
+            "stage_choices": STAGES
+        }
     })
 
 
