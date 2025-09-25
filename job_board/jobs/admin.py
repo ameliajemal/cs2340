@@ -19,6 +19,5 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
-# Register your models here.
 admin.site.register(Job, JobAdmin)
 admin.site.register(Skill, SkillAdmin)

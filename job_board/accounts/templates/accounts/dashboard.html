@@ -8,8 +8,35 @@
           <div class="card-body">
             <h2>Recruiter Dashboard</h2>
             <hr />
-            <p>Welcome to your recruiter dashboard! This page is currently empty but accessible only to recruiters.</p>
-            <p>You can add recruiter-specific functionality here in the future.</p>
+            <p>Welcome to your recruiter dashboard! Manage your job postings and track applications.</p>
+            
+            <div class="row mt-4">
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Post New Job</h5>
+                    <p class="card-text">Create a new job posting to attract candidates.</p>
+                    <a href="{% url 'jobs.create' %}" class="btn btn-primary">
+                      <i class="fas fa-plus"></i> Post Job
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-briefcase fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Manage Jobs</h5>
+                    <p class="card-text">View, edit, and manage your existing job postings.</p>
+                    <a href="{% url 'jobs.manage' %}" class="btn btn-success">
+                      <i class="fas fa-cog"></i> Manage Jobs
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

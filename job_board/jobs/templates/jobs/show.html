@@ -12,32 +12,12 @@
           <div class="card-body">
             <div class="mb-3">
               <span class="badge bg-primary me-2">{{ template_data.job.job_type }}</span>
-              {% if template_data.job.is_remote %}
-                <span class="badge bg-success me-2">Remote</span>
-              {% endif %}
-               {% if template_data.job.provides_sponsorship %}
-                <span class="badge bg-info text-dark me-2">Visa Sponsorship</span>
-              {% endif %}
             </div>
-
-            {% if template_data.job.salary_min and template_data.job.salary_max %}
-            <p><strong>Salary Range:</strong> ${{ template_data.job.salary_min|floatformat }} - ${{ template_data.job.salary_max|floatformat }} per year</p>
-            {% endif %}
             
             <hr>
             
             <h6>Full Job Description:</h6>
             <p style="white-space: pre-wrap;">{{ template_data.job.description }}</p>
-
-            {% if template_data.job.skills.all %}
-            <hr>
-            <h6>Required Skills:</h6>
-            <p>
-              {% for skill in template_data.job.skills.all %}
-                <span class="badge bg-secondary">{{ skill.name }}</span>
-              {% endfor %}
-            </p>
-            {% endif %}
             
             <hr>
 
