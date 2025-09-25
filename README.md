@@ -45,3 +45,31 @@ This project now supports a recruiter-facing candidate search that filters by:
 
 - Candidate data lives in the `profiles` app. We added `Profile.location` and a new `Project` model to support project-based search.
 - Only users with role `recruiter` (from `accounts.UserProfile`) can access the search page.
+
+## Admin: Manage Users and Roles (Built-in Django Admin)
+
+We leverage Django's admin site to fulfill the story "As an Administrator, I want to manage users and roles so the platform remains fair and safe."
+
+### Setup default groups/roles and permissions
+
+From `cs2340/job_board/` run:
+
+```bash
+python3 manage.py setup_roles --with-demo-admin
+```
+
+This creates groups `Regular`, `Moderator`, and `Admin` with sensible permissions and a demo superuser:
+- Username: `site_admin`
+- Password: `admin123`
+
+### Access the Admin
+
+```bash
+python3 manage.py runserver
+```
+Visit http://127.0.0.1:8000/admin/ and log in as the demo admin (or your own superuser).
+
+In the Users list, you can:
+- Use bulk actions to deactivate/reactivate users.
+- Assign group-based roles via actions: Regular, Moderator, Admin.
+- View a user's `UserProfile` inline and see their `Account Role` and `Groups` columns.
