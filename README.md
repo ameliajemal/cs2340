@@ -2,6 +2,7 @@
 
 ## Recruiter Candidate Search
 
+<<<<<<< HEAD
 This project now supports a recruiter-facing candidate search that filters by:
 
 - Skills (multi-select)
@@ -73,3 +74,7 @@ In the Users list, you can:
 - Use bulk actions to deactivate/reactivate users.
 - Assign group-based roles via actions: Regular, Moderator, Admin.
 - View a user's `UserProfile` inline and see their `Account Role` and `Groups` columns.
+=======
+-  `test_recruiter / testpass123` is seeded).
+-  `test_applicant / testpass123` is seeded).
+>>>>>>> 3c332efe7b3bb2c54ef0b7f2f14a7c8d0f9ff9b5
