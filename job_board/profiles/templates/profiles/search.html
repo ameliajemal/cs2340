@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <h1 class="mb-4">Find Candidates</h1>
+
+    <form method="get" class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Skills</label>
+        {{ form.skills }}
+        <div class="form-text">{{ form.skills.help_text }}</div>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Location</label>
+        {{ form.location }}
+        <div class="form-text">{{ form.location.help_text }}</div>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Project keywords</label>
+        {{ form.project_keywords }}
+        <div class="form-text">{{ form.project_keywords.help_text }}</div>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit"><i class="fa fa-search me-1"></i>Search</button>
+        <a class="btn btn-outline-secondary" href="{% url 'profiles.search' %}">Reset</a>
+      </div>
+    </form>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if profiles %}
+          <p class="text-muted">{{ profiles|length }} candidate{{ profiles|length|pluralize }} found</p>
+          <div class="list-group">
+            {% for p in profiles %}
+            <div class="list-group-item list-group-item-action py-3">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ p.user.get_full_name|default:p.user.username }}</h5>
+                {% if p.location %}<span class="badge bg-secondary">{{ p.location }}</span>{% endif %}
+              </div>
+              {% if p.headline %}<p class="mb-1">{{ p.headline }}</p>{% endif %}
+              {% if p.bio %}<p class="small text-muted">{{ p.bio|truncatewords:30 }}</p>{% endif %}
+              <div class="mt-2">
+                <strong>Skills:</strong>
+                {% with p.profileskill_set.all as ps %}
+                  {% if ps %}
+                    {% for s in ps %}<span class="badge bg-light text-dark me-1">{{ s.skill.name }}</span>{% endfor %}
+                  {% else %}<span class="text-muted">No skills listed</span>{% endif %}
+                {% endwith %}
+              </div>
+              <div class="mt-2">
+                <strong>Projects:</strong>
+                {% if p.projects.all %}
+                  <ul class="small mb-0">
+                    {% for proj in p.projects.all|slice:":3" %}
+                      <li>
+                        {% if proj.url %}<a href="{{ proj.url }}" target="_blank">{{ proj.name }}</a>{% else %}{{ proj.name }}{% endif %}
+                        {% if proj.description %} — {{ proj.description|truncatewords:20 }}{% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}<span class="text-muted">No projects listed</span>{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No candidates found. Try broadening your search.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
