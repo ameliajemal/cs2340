@@ -9,11 +9,19 @@
         {% if template_data.applications %}
           {% for app in template_data.applications %}
           <div class="card mb-4">
-            <div class="card-header">
-              Application for: <a href="{% url 'jobs.show' id=app.job.id %}">{{ app.job.title }}</a>
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div>
+                Application for: <a href="{% url 'jobs.show' id=app.job.id %}">{{ app.job.title }}</a>
+              </div>
+              <span class="badge bg-{% if app.stage == 'rejected' %}danger{% elif app.stage == 'offer' %}warning{% elif app.stage == 'interview' %}info{% elif app.stage == 'review' %}secondary{% else %}primary{% endif %}">
+                {{ app.get_stage_display }}
+              </span>
             </div>
             <div class="card-body">
-              <b>Date Applied:</b> {{ app.date_applied }}<br />
+              <b>Date Applied:</b> {{ app.date_applied|date:"F j, Y" }}<br />
+              {% if app.notes %}
+              <b>Notes:</b> {{ app.notes }}<br />
+              {% endif %}
             </div>
           </div>
           {% endfor %}

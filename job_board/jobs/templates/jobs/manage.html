@@ -56,6 +56,11 @@
                       <a href="{% url 'jobs.edit' job.id %}" class="btn btn-outline-warning btn-sm">
                         <i class="fas fa-edit"></i> Edit
                       </a>
+                      {% if job.application_count > 0 %}
+                      <a href="{% url 'applications.pipeline' job.id %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-columns"></i> Pipeline
+                      </a>
+                      {% endif %}
                       <a href="{% url 'jobs.delete' job.id %}" class="btn btn-outline-danger btn-sm">
                         <i class="fas fa-trash"></i> Delete
                       </a>

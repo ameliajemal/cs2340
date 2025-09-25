@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import Http404
 from .models import UserProfile
+from jobs.models import Job
+from applications.models import Application
 
 def is_recruiter(user):
     """Check if user is a recruiter"""
@@ -51,13 +53,39 @@ def signup(request):
 
 @login_required
 def dashboard(request):
-    """Dashboard view - accessible only to recruiters"""
-    if not is_recruiter(request.user):
+    """Recruiter dashboard with pipelines overview"""
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'recruiter':
         raise Http404("Page not found")
     
-    template_data = {}
-    template_data['title'] = 'Dashboard'
-    return render(request, 'accounts/dashboard.html', {'template_data': template_data})
+    # Get all jobs posted by this recruiter with application counts
+    jobs = Job.objects.filter(recruiter=request.user).order_by('-posted_at')
+    
+    # Add pipeline data for each job
+    for job in jobs:
+        applications = Application.objects.filter(job=job)
+        job.total_applications = applications.count()
+        
+        # Count applications by stage
+        job.stage_counts = {}
+        STAGES = [
+            ('rejected', 'Rejected'),
+            ('applied', 'Applied'),
+            ('review', 'Under Review'),
+            ('interview', 'Interview'),
+            ('offer', 'Offer'),
+        ]
+        for stage_code, stage_name in STAGES:
+            count = applications.filter(stage=stage_code).count()
+            job.stage_counts[stage_code] = {
+                'name': stage_name,
+                'count': count
+            }
+    
+    template_data = {
+        "title": "Recruiter Dashboard",
+        "jobs": jobs
+    }
+    return render(request, "accounts/dashboard.html", {"template_data": template_data})
 
 @login_required
 def orders(request):

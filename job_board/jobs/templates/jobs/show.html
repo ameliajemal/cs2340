@@ -2,6 +2,15 @@
 {% block content %}
 <div class="p-3" style="background-color: #f8f9fa;">
   <div class="container my-4">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    
     <div class="row">
       <div class="col-md-8 mx-auto">
         <div class="card shadow-sm">
