@@ -6,7 +6,6 @@ class Command(BaseCommand):
     help = 'Create test users with different roles'
 
     def handle(self, *args, **options):
-        # Create test applicant
         applicant_user, created = User.objects.get_or_create(
             username='test_applicant',
             defaults={'email': 'applicant@test.com'}
@@ -19,7 +18,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('Test applicant user already exists'))
 
-        # Create test recruiter
         recruiter_user, created = User.objects.get_or_create(
             username='test_recruiter',
             defaults={'email': 'recruiter@test.com'}

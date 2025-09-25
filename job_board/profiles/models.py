@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from jobs.models import Skill
 
 
 class Profile(models.Model):
@@ -11,12 +12,12 @@ class Profile(models.Model):
         return self.user.username
 
 
-class Skill(models.Model):
+class ProfileSkill(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return f"{self.profile.user.username} - {self.skill.name}"
 
 
 class Education(models.Model):

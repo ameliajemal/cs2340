@@ -32,6 +32,5 @@ class CustomUserCreationForm(UserCreationForm):
         user = super().save(commit=False)
         if commit:
             user.save()
-            # Create UserProfile with selected role
             UserProfile.objects.create(user=user, role=self.cleaned_data['role'])
         return user

@@ -46,7 +46,6 @@ class Job(models.Model):
 
     skills = models.ManyToManyField(Skill, blank=True)
 
-    # Timestamps
     posted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
