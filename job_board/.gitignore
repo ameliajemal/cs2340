@@ -1,0 +1,22 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media/
+.DS_Store
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Static files
+staticfiles/
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
