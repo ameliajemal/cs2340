@@ -7,8 +7,6 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     headline = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
-    # Optional city/region information to support candidate location search
-    location = models.CharField(max_length=255, blank=True, help_text="City, State or Country")
 
     def __str__(self):
         return self.user.username
@@ -20,19 +18,6 @@ class ProfileSkill(models.Model):
 
     def __str__(self):
         return f"{self.profile.user.username} - {self.skill.name}"
-
-
-class Project(models.Model):
-    """A project the candidate has worked on (coursework, personal, internship).
-    Used to power recruiter search by projects/keywords.
-    """
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="projects")
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    url = models.URLField(blank=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.profile.user.username})"
 
 
 class Education(models.Model):

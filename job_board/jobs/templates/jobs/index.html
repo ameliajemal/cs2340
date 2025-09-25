@@ -6,15 +6,44 @@
       <div class="col mx-auto mb-4">
         <h2>Job Listings</h2>
         <hr />
-        <form method="GET" class="card p-3">
-            <div class="row g-2">
-              <div class="col-md-10">
-                <input type="text" class="form-control" name="search" value="{{ request.GET.search }}" placeholder="Search by job title, company, or skill...">
-              </div>
-              <div class="col-md-2 d-grid">
-                <button class="btn btn-primary" type="submit">Search</button>
-              </div>
+        <form method="get" class="card p-3 mb-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Keyword</label>
+              {{ filter_form.q }}
             </div>
+            <div class="col-md-3">
+              <label class="form-label">Location</label>
+              {{ filter_form.location }}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Remote / On-site</label>
+              {{ filter_form.remote }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Visa sponsorship</label>
+              {{ filter_form.sponsorship }}
+            </div>
+          
+            <div class="col-md-6">
+              <label class="form-label">Skills (multi-select)</label>
+              {{ filter_form.skills }}
+            </div>
+          
+            <div class="col-md-3">
+              <label class="form-label">Min salary (USD)</label>
+              {{ filter_form.salary_min }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Max salary (USD)</label>
+              {{ filter_form.salary_max }}
+            </div>
+          
+            <div class="col-12 d-flex gap-2">
+              <button class="btn btn-primary" type="submit">Filter</button>
+              <a class="btn btn-outline-secondary" href="{% url 'jobs.index' %}">Clear</a>
+            </div>
+          </div>
         </form>
       </div>
     </div>

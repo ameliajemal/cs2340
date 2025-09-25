@@ -2,22 +2,64 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import Http404
+from django.db.models import Q
 from .models import Job
-from .forms import JobForm
+from .forms import JobForm, JobFilterForm
 from applications.models import Application
 
 
 def index(request):
-    search_term = request.GET.get("search")
-    if search_term:
-        jobs = Job.objects.filter(title__icontains=search_term)
-    else:
-        jobs = Job.objects.all()
+    qs = Job.objects.all().prefetch_related("skills").order_by("-posted_at")
 
-    template_data = {}
-    template_data["title"] = "Jobs"
-    template_data["jobs"] = jobs
-    return render(request, "jobs/index.html", {"template_data": template_data})
+    form = JobFilterForm(request.GET or None)
+
+    if form.is_valid():
+        q = form.cleaned_data.get("q")
+        if q:
+            qs = qs.filter(
+                Q(title__icontains=q) |
+                Q(company__icontains=q) |
+                Q(description__icontains=q) |
+                Q(location__icontains=q) |
+                Q(skills__name__icontains=q)
+            )
+
+        location = form.cleaned_data.get("location")
+        if location:
+            qs = qs.filter(location__icontains=location)
+
+        skills = form.cleaned_data.get("skills")
+        if skills:
+            for s in skills:
+                qs = qs.filter(skills=s)
+
+        desired_min = form.cleaned_data.get("salary_min")
+        if desired_min not in (None, ""):
+            qs = qs.filter(Q(salary_max__gte=desired_min) | Q(salary_min__gte=desired_min))
+
+        desired_max = form.cleaned_data.get("salary_max")
+        if desired_max not in (None, ""):
+            qs = qs.filter(Q(salary_min__lte=desired_max) | Q(salary_max__lte=desired_max))
+
+        remote = form.cleaned_data.get("remote")
+        if remote == "remote":
+            qs = qs.filter(is_remote=True)
+        elif remote == "onsite":
+            qs = qs.filter(is_remote=False)
+
+        sponsorship = form.cleaned_data.get("sponsorship")
+        if sponsorship == "yes":
+            qs = qs.filter(provides_sponsorship=True)
+        elif sponsorship == "no":
+            qs = qs.filter(provides_sponsorship=False)
+
+        qs = qs.distinct()
+
+    template_data = {
+        "title": "Job Listings",
+        "jobs": qs,
+    }
+    return render(request, "jobs/index.html", {"template_data": template_data, "filter_form": form})
 
 
 def show(request, id):
