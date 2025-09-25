@@ -6,10 +6,9 @@ from django.db.models import Q
 from .models import Job
 from .forms import JobForm, JobFilterForm
 from applications.models import Application
-from .models import Profile
-from .forms import ProfileForm
-from .forms import JobApplicationForm
-from .models import Job, Profile, JobApplication
+from profiles.models import Profile as CandidateProfile, Education, WorkExperience
+from profiles.forms import ProfileForm as CandidateProfileForm
+from .models import Job
 
 def index(request):
     qs = Job.objects.all().prefetch_related("skills").order_by("-posted_at")
@@ -164,76 +163,51 @@ def manage(request):
 @login_required
 def create_profile(request):
     # Check if profile already exists
-    if Profile.objects.filter(user=request.user).exists():
+    if CandidateProfile.objects.filter(user=request.user).exists():
         messages.info(request, "You already have a profile.")
         return redirect('jobs.view_profile')
 
-    template_data = {"title": "Create Your Profile"}
-
     if request.method == 'POST':
-        form = ProfileForm(request.POST)
+        form = CandidateProfileForm(request.POST)
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
             profile.save()
+            # Now that profile has a PK, sync skills via form.save (without altering basic fields)
+            form.instance = profile
+            form.save(commit=False)
             messages.success(request, "Profile created successfully!")
             return redirect('jobs.view_profile')
-        else:
-            template_data['form'] = form
     else:
-        template_data['form'] = ProfileForm()
+        form = CandidateProfileForm()
 
-    return render(request, "jobs/edit_profile.html", {"template_data": template_data})
+    return render(request, "profiles/edit_profile.html", {"form": form})
 
 @login_required
 def view_profile(request):
-    profile = get_object_or_404(Profile, user=request.user)
-    return render(request, "jobs/profile.html", {"profile": profile})
+    profile = get_object_or_404(CandidateProfile, user=request.user)
+    educations = Education.objects.filter(profile=profile).order_by('-start_date')
+    experiences = WorkExperience.objects.filter(profile=profile).order_by('-start_date')
+    return render(request, "profiles/profile.html", {"profile": profile, "educations": educations, "experiences": experiences})
 
 @login_required
 def edit_profile(request):
-    profile = get_object_or_404(Profile, user=request.user)
-    template_data = {"title": "Edit Your Profile"}
+    profile = get_object_or_404(CandidateProfile, user=request.user)
 
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=profile)
+        form = CandidateProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('jobs.view_profile')
-        else:
-            template_data['form'] = form
     else:
-        template_data['form'] = ProfileForm(instance=profile)
+        form = CandidateProfileForm(instance=profile)
 
-    return render(request, "jobs/edit_profile.html", {"template_data": template_data})
+    return render(request, "profiles/edit_profile.html", {"form": form})
 
 
 @login_required
 def apply_to_job(request, id):
-    job = get_object_or_404(Job, id=id)
-
-    # Prevent duplicate applications
-    if JobApplication.objects.filter(job=job, user=request.user).exists():
-        messages.info(request, "You've already applied to this job.")
-        return redirect('jobs.show', id=job.id)
-
-    if request.method == 'POST':
-        form = JobApplicationForm(request.POST)
-        if form.is_valid():
-            application = form.save(commit=False)
-            application.job = job
-            application.user = request.user
-            application.save()
-            messages.success(request, "Application submitted successfully!")
-            return redirect('jobs.show', id=job.id)
-    else:
-        form = JobApplicationForm()
-
-    template_data = {
-        "title": f"Apply to {job.title}",
-        "job": job,
-        "form": form
-    }
-    return render(request, "jobs/apply_job.html", {"template_data": template_data})
+    # Redirect to canonical applications app route
+    return redirect('applications.apply', job_id=id)
 

@@ -5,17 +5,29 @@
     <p><strong>Headline:</strong> {{ profile.headline }}</p>
     <p><strong>Bio:</strong> {{ profile.bio }}</p>
     <p><strong>Location:</strong> {{ profile.location }}</p>
-    <p><strong>Skills:</strong>
-        {% for skill in profile.skills.all %}
-            <span class="badge bg-primary">{{ skill.name }}</span>
-        {% empty %}
-            No skills added.
-        {% endfor %}
-    </p>
     <p><strong>Links:</strong>
         {% if profile.linkedin %}<a href="{{ profile.linkedin }}" target="_blank">LinkedIn</a>{% endif %}
-        {% if profile.github %} | <a href="{{ profile.github }}" target="_blank">GitHub</a>{% endif %}
-        {% if profile.portfolio %} | <a href="{{ profile.portfolio }}" target="_blank">Portfolio</a>{% endif %}
+        {% if profile.github %}{% if profile.linkedin %} | {% endif %}<a href="{{ profile.github }}" target="_blank">GitHub</a>{% endif %}
+        {% if profile.portfolio %}{% if profile.linkedin or profile.github %} | {% endif %}<a href="{{ profile.portfolio }}" target="_blank">Portfolio</a>{% endif %}
+        {% if not profile.linkedin and not profile.github and not profile.portfolio %}No links provided.{% endif %}
+    </p>
+    <p><strong>Projects:</strong>
+        {% if profile.projects %}
+            <div class="mt-1">{{ profile.projects|linebreaksbr }}</div>
+        {% else %}
+            <span class="text-muted">No projects added.</span>
+        {% endif %}
+    </p>
+    <p><strong>Skills:</strong>
+        {% with profile.profileskill_set.all as ps %}
+            {% if ps %}
+                {% for s in ps %}
+                    <span class="badge bg-primary">{{ s.skill.name }}</span>
+                {% endfor %}
+            {% else %}
+                No skills added.
+            {% endif %}
+        {% endwith %}
     </p>
 
     <h4>Education</h4>
@@ -36,6 +48,6 @@
         {% endfor %}
     </ul>
 
-    <a href="{% url 'profiles.edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+    <a href="{% url 'jobs.edit_profile' %}" class="btn btn-primary">Edit Profile</a>
 </div>
 {% endblock content %}
