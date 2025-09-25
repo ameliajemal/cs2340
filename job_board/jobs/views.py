@@ -6,7 +6,10 @@ from django.db.models import Q
 from .models import Job
 from .forms import JobForm, JobFilterForm
 from applications.models import Application
-
+from .models import Profile
+from .forms import ProfileForm
+from .forms import JobApplicationForm
+from .models import Job, Profile, JobApplication
 
 def index(request):
     qs = Job.objects.all().prefetch_related("skills").order_by("-posted_at")
@@ -157,3 +160,80 @@ def manage(request):
     template_data["title"] = "Manage Jobs"
     template_data["jobs"] = jobs
     return render(request, "jobs/manage.html", {"template_data": template_data})
+
+@login_required
+def create_profile(request):
+    # Check if profile already exists
+    if Profile.objects.filter(user=request.user).exists():
+        messages.info(request, "You already have a profile.")
+        return redirect('jobs.view_profile')
+
+    template_data = {"title": "Create Your Profile"}
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+            messages.success(request, "Profile created successfully!")
+            return redirect('jobs.view_profile')
+        else:
+            template_data['form'] = form
+    else:
+        template_data['form'] = ProfileForm()
+
+    return render(request, "jobs/edit_profile.html", {"template_data": template_data})
+
+@login_required
+def view_profile(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    return render(request, "jobs/profile.html", {"profile": profile})
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    template_data = {"title": "Edit Your Profile"}
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('jobs.view_profile')
+        else:
+            template_data['form'] = form
+    else:
+        template_data['form'] = ProfileForm(instance=profile)
+
+    return render(request, "jobs/edit_profile.html", {"template_data": template_data})
+
+
+@login_required
+def apply_to_job(request, id):
+    job = get_object_or_404(Job, id=id)
+
+    # Prevent duplicate applications
+    if JobApplication.objects.filter(job=job, user=request.user).exists():
+        messages.info(request, "You've already applied to this job.")
+        return redirect('jobs.show', id=job.id)
+
+    if request.method == 'POST':
+        form = JobApplicationForm(request.POST)
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.job = job
+            application.user = request.user
+            application.save()
+            messages.success(request, "Application submitted successfully!")
+            return redirect('jobs.show', id=job.id)
+    else:
+        form = JobApplicationForm()
+
+    template_data = {
+        "title": f"Apply to {job.title}",
+        "job": job,
+        "form": form
+    }
+    return render(request, "jobs/apply_job.html", {"template_data": template_data})
+

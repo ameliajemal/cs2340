@@ -1,5 +1,5 @@
 from django import forms
-from .models import Job, Skill
+from .models import Job, Skill, Profile, JobApplication
 
 class JobForm(forms.ModelForm):
     class Meta:
@@ -71,3 +71,27 @@ class JobFilterForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Visa sponsorship"
     )
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['headline', 'skills', 'education', 'experience', 'links']
+        widgets = {
+            'headline': forms.TextInput(attrs={'class': 'form-control'}),
+            'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'education': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'experience': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'links': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+        
+class JobApplicationForm(forms.ModelForm):
+    class Meta:
+        model = JobApplication
+        fields = ['note']
+        widgets = {
+            'note': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Add a personalized note...',
+                'rows': 4
+            })
+        }

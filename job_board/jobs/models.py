@@ -8,6 +8,16 @@ class Skill(models.Model):
     def __str__(self):
         return self.name
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='job_profile')
+    headline = models.CharField(max_length=255, default="No headline yet")
+    skills = models.TextField(default="No skills listed")
+    education = models.TextField(default="No education info")
+    experience = models.TextField(default="No experience info")
+    links = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
 
 class Job(models.Model):
     FULL_TIME = "Full-Time"
@@ -51,3 +61,12 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.title} at {self.company}"
+
+class JobApplication(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    note = models.TextField(blank=True)
+    applied_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} applied to {self.job.title}"

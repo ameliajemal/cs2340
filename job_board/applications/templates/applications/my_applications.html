@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ template_data.title }}</h2>
+  <hr>
+  {% if template_data.applications %}
+    {% for app in template_data.applications %}
+      <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">{{ app.job.title }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ app.job.company }} — {{ app.job.location }}</h6>
+          {% if app.note %}
+            <p><strong>Your Note:</strong> {{ app.notes }}</p>
+          {% endif %}
+          <p><small class="text-muted">Applied on {{ app.date_applied|date:"F j, Y" }}</small></p>
+          <a href="{% url 'jobs.show' id=app.job.id %}" class="btn btn-outline-primary">View Job</a>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">You haven’t applied to any jobs yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

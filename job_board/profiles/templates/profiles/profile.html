@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ profile.user.username }}'s Profile</h2>
+    <p><strong>Headline:</strong> {{ profile.headline }}</p>
+    <p><strong>Bio:</strong> {{ profile.bio }}</p>
+    <p><strong>Location:</strong> {{ profile.location }}</p>
+    <p><strong>Skills:</strong>
+        {% for skill in profile.skills.all %}
+            <span class="badge bg-primary">{{ skill.name }}</span>
+        {% empty %}
+            No skills added.
+        {% endfor %}
+    </p>
+    <p><strong>Links:</strong>
+        {% if profile.linkedin %}<a href="{{ profile.linkedin }}" target="_blank">LinkedIn</a>{% endif %}
+        {% if profile.github %} | <a href="{{ profile.github }}" target="_blank">GitHub</a>{% endif %}
+        {% if profile.portfolio %} | <a href="{{ profile.portfolio }}" target="_blank">Portfolio</a>{% endif %}
+    </p>
+
+    <h4>Education</h4>
+    <ul>
+        {% for edu in educations %}
+            <li>{{ edu.degree }} in {{ edu.field_of_study }} at {{ edu.institution }} ({{ edu.start_date }} - {{ edu.end_date|default:"Present" }})</li>
+        {% empty %}
+            <li>No education added.</li>
+        {% endfor %}
+    </ul>
+
+    <h4>Work Experience</h4>
+    <ul>
+        {% for work in experiences %}
+            <li>{{ work.title }} at {{ work.company }} ({{ work.start_date }} - {{ work.end_date|default:"Present" }})</li>
+        {% empty %}
+            <li>No work experience added.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'profiles.edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+</div>
+{% endblock content %}

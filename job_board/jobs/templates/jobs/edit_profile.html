@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ template_data.title }}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ template_data.form.as_p }}
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{% url 'jobs.view_profile' %}" class="btn btn-secondary">Cancel</a>
+</div>
+{% endblock %}
